@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+dados/
+
+# Material de referência do professor (não faz parte do trabalho entregue)
+PequenoExemploMVC/
