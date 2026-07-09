@@ -1,0 +1,136 @@
+classDiagram
+    %% ===================== MODELO (ENTIDADES) =====================
+    class Pessoa {
+        <<abstract>>
+        -nome str
+        -celular str
+        -cpf str
+        -data_nascimento date
+    }
+    class Paciente {
+        +idade() int
+    }
+    class Profissional {
+        -especialidade str
+        -registro_profissional str
+    }
+    class TipoAtendimento {
+        -codigo int
+        -descricao str
+    }
+    class Clinica {
+        -codigo int
+        -nome str
+        -cidade str
+        -descricao str
+        -hora_abertura time
+        -hora_fechamento time
+        +adicionarProfissional(p)
+        +removerProfissional(p)
+    }
+    class Atendimento {
+        -codigo int
+        -data_atendimento date
+        -hora_inicio time
+        -hora_fim time
+        -valor_base float
+        +valorTotal() float
+        +valorPago() float
+        +valorRestante() float
+        +atualizar(tipo, data, hora, valor)
+        +adicionarProcedimento(p)
+        +adicionarPagamento(p)
+    }
+    class Procedimento {
+        -codigo int
+        -descricao str
+        -custo float
+    }
+    class Pagamento {
+        <<abstract>>
+        -codigo int
+        -data_pagamento date
+        -valor_pago float
+        +modalidade() str*
+        +detalhes() str*
+    }
+    class PagamentoDinheiro {
+        +modalidade() str
+    }
+    class PagamentoPix {
+        -cpf_pagador str
+        +modalidade() str
+    }
+    class PagamentoCartao {
+        -numero_cartao str
+        -bandeira str
+        +modalidade() str
+    }
+
+    Pessoa <|-- Paciente
+    Pessoa <|-- Profissional
+    Clinica "1" o-- "0..*" Profissional : atua em
+    Atendimento "0..*" --> "1" Paciente
+    Atendimento "0..*" --> "1" Profissional
+    Atendimento "0..*" --> "1" Clinica
+    Atendimento "0..*" --> "1" TipoAtendimento
+    Atendimento "1" *-- "0..*" Procedimento
+    Atendimento "1" *-- "0..*" Pagamento
+    Procedimento --> Profissional : responsável
+    Pagamento --> Paciente : paciente
+    Pagamento <|-- PagamentoDinheiro
+    Pagamento <|-- PagamentoPix
+    Pagamento <|-- PagamentoCartao
+
+    %% ===================== ARQUITETURA (MVC + DAO) =====================
+    %% Só o controlador principal + UM controlador/tela/DAO de exemplo (Clínica),
+    %% mais as duas classes abstratas que sustentam o padrão (TelaGenerica, DAO).
+    class ControladorPrincipal {
+        <<Singleton>>
+        -instance ControladorPrincipal$
+        +iniciar()
+    }
+    class ControladorClinicas {
+        +abrir_tela()
+        +incluir_clinica()
+        +editar_clinica()
+        +excluir_clinica()
+        +listar_clinicas()
+    }
+    class TelaGenerica {
+        -window Window
+        +open()
+        +close()
+        +mostrar_mensagem(msg)
+        +mostrar_erro(msg)
+        +confirmar(msg) bool
+        +mostrar_lista(titulo, linhas)
+        +selecionar_da_lista(titulo, opcoes, itens)
+    }
+    class TelaClinica {
+        +tela_opcoes() str
+        +pegar_dados_clinica() dict
+    }
+    class DAO {
+        <<abstract>>
+        +incluir(obj)*
+        +alterar(obj)*
+        +excluir(obj)*
+        +listar() list*
+    }
+    class ClinicaDAO {
+        +incluir(c)
+        +alterar(c)
+        +excluir(c)
+        +listar() list
+    }
+
+    ControladorPrincipal "1" *-- "1" ControladorClinicas
+    ControladorClinicas --> TelaClinica : usa
+    ControladorClinicas --> ClinicaDAO : persiste via
+    TelaClinica --|> TelaGenerica
+    ClinicaDAO --|> DAO
+
+    %% ===================== PONTE ARQUITETURA -> MODELO =====================
+    ControladorClinicas "1" --> "0..*" Clinica : gerencia
+    ClinicaDAO "1" --> "0..*" Clinica : persiste
